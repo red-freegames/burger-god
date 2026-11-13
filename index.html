@@ -196,9 +196,6 @@ footer{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 </section>
 
 <footer>
- <button class="btn sub" data-buy="1">購入: ×1</button>
- <button class="btn sub" data-buy="10">×10</button>
- <button class="btn sub" data-buy="max">MAX</button>
  <button class="btn sub" id="bShare">𝕏 でシェア</button>
  <button class="btn sub" id="bOther">🎮 他のゲームを見る</button>
  <button class="btn sub" id="bSound">🔊 効果音</button>
@@ -390,7 +387,7 @@ function newState(){
     boostLeft:0,boostCd:0,sound:true,speed:1,debtTime:0,bankruptCount:0,soldTotal:0,mDone:{},boostCount:0,lastSave:Date.now()};
 }
 let S=newState();
-const R={prod:{},sold:0,rev:0,incomeRate:0,fac:{},sellStall:null,pendingTitle:-1,hist:{},shist:{},cons:{},ema:{p:{},c:{}},bal:{},buyMode:1};
+const R={prod:{},sold:0,rev:0,incomeRate:0,fac:{},sellStall:null,pendingTitle:-1,hist:{},shist:{},cons:{},ema:{p:{},c:{}},bal:{},buyMode:'max'};
 function resetRuntime(){
   ITEMS.forEach(i=>{R.prod[i.id]=0;R.cons[i.id]=0;R.ema.p[i.id]=null;R.ema.c[i.id]=null;R.bal[i.id]=null;R.hist[i.id]=[];R.shist[i.id]=[];});
   R.hist.sales=[];R.upk=0;R.bankrupt=0;R.sold=0;R.rev=0;R.incomeRate=0;R.sellStall=null;R.pendingTitle=-1;
