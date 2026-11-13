@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>バーガーGOD</title>
+<meta name="description" content="ハンバーガーの原材料から販売までを垂直統合する、放置・増殖系の工場育成ゲーム。生産ラインのバランスを整えて、世界の食卓を支配しよう。">
+<meta property="og:title" content="バーガーGOD">
+<meta property="og:description" content="ハンバーガー工場を育てる放置ゲーム。称号『デブの神』を目指せ！">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://red-freegames.github.io/burger-god/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🍔%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#1a120d;--card:#2b1e16;--card2:#35261c;--line:#4a3527;--text:#fff4e6;--sub:#c9ae94;--acc:#ffb52e;--red:#ff4d4d;--org:#ff9f43;--grn:#5ee08a;--blu:#5ec2ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;font-size:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+#app{max-width:1400px;margin:0 auto;padding:0 12px 30px}
+header#top{position:sticky;top:0;z-index:20;background:linear-gradient(#1a120d 85%,#1a120d00);padding:6px 0 4px}
+.rankrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.rank{font-size:26px;font-weight:800;color:var(--acc)}
+#speed{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:14px;color:var(--sub)}
+#speed button{min-width:46px;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:#3d2d22;font-weight:700;font-size:15px}
+#speed button.on{background:var(--acc);color:#2a1700;border-color:var(--acc)}
+.rsub{font-size:14px;color:var(--sub)}
+.prog{height:8px;background:#0007;border-radius:4px;overflow:hidden;margin:3px 0 5px}
+.prog>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9f43,#ffd32e)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:3px 10px;min-width:0}
+.stat label{display:block;font-size:12px;color:var(--sub)}
+.stat b{font-size:22px;white-space:nowrap}
+.stat small{display:block;font-size:12px;color:var(--sub)}
+#alert{margin-top:5px;padding:5px 10px;border-radius:8px;font-size:15px;font-weight:700;display:none}
+#alert.bad{display:block;background:#5a1414;border:1px solid var(--red);color:#ffd0d0}
+#alert.hint{display:block;background:#173a22;border:1px solid #2f8a4f;color:#c9f5d8}
+section{margin-top:8px}
+h2{font-size:16px;margin:0 0 5px;color:var(--sub);font-weight:700;letter-spacing:.05em}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+#ctl{display:grid;grid-template-columns:170px 1fr;gap:8px}
+#burgerWrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+#burger{width:140px;height:140px;border-radius:50%;border:0;position:relative;background:conic-gradient(var(--rc,#555) calc(var(--p,0)*1%),#0006 0);padding:0;user-select:none;touch-action:manipulation}
+#burger>span{position:absolute;inset:9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#4a3224,#241812);display:flex;align-items:center;justify-content:center;font-size:74px;line-height:1;transition:transform .08s}
+#burger:active>span{transform:scale(.92)}
+#burger.ready{--rc:var(--acc);animation:pulse 1.2s infinite}
+#burger.boost{--rc:var(--grn)}
+#burger.cd{--rc:var(--blu)}
+@keyframes pulse{50%{box-shadow:0 0 22px 4px #ffb52e88}}
+#bstat{font-size:14px;font-weight:700;text-align:center;min-height:16px}
+#menus{display:flex;flex-wrap:wrap;gap:6px}
+.mchip{background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:5px 10px;text-align:left;min-width:0;font-size:14px;line-height:1.3}
+.mchip b{display:block;font-size:15px}
+.mchip.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset;background:#4a3320}
+.mchip.locked{opacity:.65;border-style:dashed}
+.mchip.hidden{display:none}
+.mdetail{margin:8px 0 4px;padding:8px 10px;background:#0004;border-radius:8px;font-size:15px}
+.mdetail .rcs{margin-top:4px}
+.mdetail .rc{margin-right:4px}
+.mdetail .mstat{margin-top:4px;color:var(--sub)}
+.mdetail .btn{margin-top:6px;width:100%;text-align:center}
+#recipe{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 3px}
+.rc{border-radius:6px;padding:2px 7px;background:#0005;font-size:15px;border:1px solid transparent}
+.rc.short{background:#5a1414;border-color:var(--red);color:#ffd0d0}
+#diag{font-size:15px;color:var(--sub)}
+.mg{display:grid;grid-template-columns:1fr;gap:6px;margin-top:6px}
+.btn{background:linear-gradient(#ffb52e,#e0881a);color:#2a1700;border:0;border-radius:8px;padding:7px 10px;font-weight:700;font-size:16px;text-align:left;line-height:1.3;min-height:44px}
+.btn small{display:block;font-weight:500;font-size:13px;opacity:.85}
+.btn:disabled{background:#4b3a2c;color:#9b8470;cursor:not-allowed}
+.btn.sub{background:#3d2d22;color:var(--text);border:1px solid var(--line)}
+.btn.sub.on{border-color:var(--acc);color:var(--acc)}
+.ms{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:5px 0;border-bottom:1px solid #ffffff12}.ms:last-child{border-bottom:0}.ms .mt{font-size:15px}.ms .mb{grid-column:1;height:8px;background:#0007;border-radius:4px;overflow:hidden}.ms .mb>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5ec2ff,#5ee08a)}.ms .mr{grid-column:2;grid-row:1/3;min-width:150px;text-align:center}.ms .mr .btn{width:100%;min-height:38px;text-align:center;padding:4px 8px}.ms .mr .rw{font-size:13px;color:var(--sub)}.ms.ok .mt{color:var(--grn);font-weight:700}.ms.ok .btn{animation:pulse 1.2s infinite}
+#mid{display:block}
+.srow{display:grid;grid-template-columns:26px 78px 1fr 108px;gap:6px;align-items:center;padding:2px 0;font-size:15px}
+.srow.off{opacity:.35}
+.sn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{position:relative;height:20px;background:#0007;border-radius:4px;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:var(--c)}
+.bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 8px,rgba(0,0,0,.5) 8px 10px)}
+.srow.short .bar{outline:1px solid var(--red)}
+.srow.short .sn{color:var(--red);font-weight:800}
+.srow.full .bar{outline:1px solid var(--org)}
+.sv{text-align:right;font-variant-numeric:tabular-nums;line-height:1.1}
+.sv small{display:block;color:var(--sub);font-size:12px}
+.sv.warn{color:var(--red)}
+#graphBox{position:relative}
+canvas#graph{width:100%;height:360px;display:block;background:#150f0b;border-radius:8px}
+#legend{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px;font-size:13px;color:var(--sub)}
+#legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px}
+.gtools{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.gtools button{padding:3px 10px;border-radius:6px;border:1px solid var(--line);background:#3d2d22;font-size:13px}
+.flow{display:flex;align-items:stretch;gap:4px}
+.arrow{align-self:center;color:var(--sub);font-size:18px;flex:0 0 auto}
+.col{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.fac{flex:1;min-width:0;position:relative;background:var(--card2);border:2px solid var(--line);border-radius:10px;padding:5px 4px;text-align:center;cursor:pointer;font-size:14px;line-height:1.3;user-select:none;touch-action:manipulation}
+.fac:hover{border-color:#8a6a4c}
+.fac .fe{font-size:32px;line-height:1.08;min-height:36px;max-height:52px;overflow:hidden;word-break:break-all;display:flex;align-items:center;justify-content:center;flex-wrap:wrap}
+.fac.ms1{border-color:#e0b43a;box-shadow:0 0 8px #e0b43a66}
+.fac.ms2{border-color:#ffd54a;box-shadow:0 0 14px #ffd54acc}
+.fac.ms3{border-color:#ff7bd5;animation:rb 2s linear infinite}
+@keyframes rb{0%{box-shadow:0 0 14px #ff5a5a}33%{box-shadow:0 0 14px #ffd54a}66%{box-shadow:0 0 14px #5ee08a}100%{box-shadow:0 0 14px #ff5a5a}}
+.fac.flash{animation:flash 1.3s ease-out}
+@keyframes flash{0%{transform:scale(1)}20%{transform:scale(1.18);box-shadow:0 0 30px 8px #ffd54a}100%{transform:scale(1)}}
+.fac .fn{font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fac .fr{color:var(--acc);font-weight:700}
+.fac .fs{color:var(--sub)}
+.fac .fb{position:absolute;top:-8px;right:-4px;font-size:12px;font-weight:800;border-radius:8px;padding:1px 7px;display:none}
+.fac.locked{opacity:.65;border-style:dashed}
+.fac.warn{border-color:var(--org)}
+.fac.starve .fb{display:block;background:var(--org);color:#2a1700}
+.fac.bn{border-color:var(--red);animation:bn 1s infinite}
+.fac.short{border-color:var(--red)}
+@keyframes bn{50%{box-shadow:0 0 12px 2px #ff4d4daa}}
+#line{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:8px 14px}
+.fac .run,.fac .fb,.fac .fs:empty{display:none!important}
+.run{height:4px;border-radius:2px;background:#0007;margin-top:3px;overflow:hidden}
+.run>i{display:block;height:100%;width:0;background:var(--grn)}
+footer{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ov{position:fixed;inset:0;z-index:50;background:#000a;display:none;align-items:flex-end;justify-content:center;padding:0}
+.ov.show{display:flex}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:16px 16px 0 0;width:min(560px,100%);padding:14px 14px 20px;max-height:90vh;overflow:auto;position:relative}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:16px}}
+.sheet h3{margin:0 0 4px;font-size:18px}
+.xbtn{position:absolute;top:8px;right:10px;background:none;border:0;font-size:24px;color:var(--sub)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin:8px 0 8px;font-size:16px}
+.kv div{background:#0004;border-radius:6px;padding:4px 8px}
+.kv span{display:block;font-size:12px;color:var(--sub)}
+.sheet .btn{width:100%;margin-top:6px}
+#cel{z-index:80;background:radial-gradient(circle,#ffb52ecc,#000d);align-items:center;overflow:hidden;cursor:pointer}
+#cel .cbox{text-align:center;padding:20px;position:relative;z-index:2}
+#cel .c1{font-size:16px;letter-spacing:.3em;color:#fff}
+#cel .c2{font-size:clamp(28px,8vw,56px);font-weight:900;color:#fff;text-shadow:0 0 20px #ff9f43,0 3px 0 #a04800;margin:10px 0;animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+#cel .c3{font-size:18px;color:#fff4d0;margin-bottom:16px}
+#cel .btns{display:flex;gap:8px;justify-content:center}
+@keyframes pop{from{transform:scale(.2);opacity:0}}
+.conf{position:absolute;top:-40px;font-size:28px;animation:fall linear forwards;z-index:1}
+@keyframes fall{to{transform:translateY(115vh) rotate(540deg)}}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000d;border:1px solid var(--acc);padding:8px 14px;border-radius:20px;z-index:90;display:none;font-size:16px;max-width:90vw;text-align:center}
+.fly{position:fixed;pointer-events:none;font-weight:900;color:var(--acc);z-index:60;animation:fly .9s ease-out forwards;text-shadow:0 2px 4px #000}
+@keyframes fly{to{transform:translateY(-60px);opacity:0}}
+@media(max-width:760px){
+ #ctl{grid-template-columns:1fr}
+ #burger{width:140px;height:140px}
+ #burger>span{font-size:72px}
+ .rank{font-size:17px}
+ .stat b{font-size:22px}
+ .srow{grid-template-columns:24px 66px 1fr 96px}
+ #line{grid-template-columns:1fr}
+ canvas#graph{height:220px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<header id="top">
+ <div class="rankrow"><div class="rank" id="rank"></div><div class="rsub" id="rankNext"></div>
+  <div id="speed"><span>⏩ 速度</span><button data-speed="1">×1</button><button data-speed="2">×2</button><button data-speed="4">×4</button><button data-speed="8">×8</button></div></div>
+ <div class="prog"><i id="rankBar"></i></div>
+ <div class="stats">
+  <div class="stat"><label>年間売上（直近365日）</label><b id="sAnnual"></b></div>
+  <div class="stat"><label>累計売上</label><b id="sTotal"></b></div>
+  <div class="stat"><label>所持金</label><b id="sMoney"></b><small id="sIncome"></small></div>
+  <div class="stat"><label>販売中</label><b id="sMenu"></b><small id="sPrice"></small></div>
+  <div class="stat"><label>累計販売</label><b id="sSold"></b><small id="sSoldRate"></small></div>
+  <div class="stat"><label>カレンダー</label><b id="sDate"></b></div>
+ </div>
+ <div id="alert"></div>
+</header>
+
+<section id="ctl">
+ <div class="panel" id="burgerWrap">
+  <button id="burger" aria-label="生産ブースト"><span>🍔</span></button>
+  <div id="bstat"></div>
+ </div>
+ <div class="panel">
+  <h2>🍽 販売メニュー（解放したメニューは全部同時に提供・タップで必要な材料を表示）</h2>
+  <div id="mdetail" class="mdetail"><div id="mInfo"></div><button class="btn" id="mUnlock" style="display:none"></button></div>
+  <div id="menus"></div>
+  <div id="diag"></div>
+ </div>
+</section>
+
+<section id="missions"><h2>🎯 ミッション（達成すると報酬）</h2><div class="panel" id="mlist"></div></section>
+<section id="mid">
+ <div class="panel">
+  <div class="gtools"><h2 style="margin:0">📊 食材ごとの生産量（個/秒）</h2><button id="gScale">目盛: 線形</button></div>
+  <div id="graphBox"><canvas id="graph"></canvas></div>
+ </div>
+</section>
+
+<section>
+ <h2>🏭 生産ライン（施設をタップで詳細・強化）</h2>
+ <div id="nextUnlock" class="rsub" style="margin:-2px 0 6px"></div>
+ <div class="panel"><div id="line"></div></div>
+</section>
+
+<footer>
+ <button class="btn sub" data-buy="1">購入: ×1</button>
+ <button class="btn sub" data-buy="10">×10</button>
+ <button class="btn sub" data-buy="max">MAX</button>
+ <button class="btn sub" id="bShare">𝕏 でシェア</button>
+ <button class="btn sub" id="bOther">🎮 他のゲームを見る</button>
+ <button class="btn sub" id="bSound">🔊 効果音</button>
+ <button class="btn sub" id="bReset">🗑 データ初期化</button>
+</footer>
+</div>
+
+<div class="ov" id="detail"><div class="sheet">
+ <button class="xbtn" id="dClose">×</button>
+ <h3 id="dTitle"></h3><div id="dDesc" style="color:var(--sub);font-size:12px"></div>
+ <div class="kv" id="dKv"></div>
+ <button class="btn" id="dUp"></button>
+</div></div>
+
+<div class="ov" id="info"><div class="sheet">
+ <button class="xbtn" id="iClose">×</button>
+ <h3 id="iTitle"></h3><div id="iBody" style="font-size:15px;line-height:1.6"></div>
+ <button class="btn" id="iOk" style="text-align:center">OK</button>
+</div></div>
+
+<div class="ov" id="cel"><div class="cbox">
+ <div class="c1">🎉 称号アップ！ 🎉</div>
+ <div class="c2" id="celTitle"></div>
+ <div class="c3" id="celSub"></div>
+ <div class="btns"><button class="btn" id="celShare">𝕏 でシェア</button><button class="btn sub" id="celClose">続ける</button></div>
+</div></div>
+<div id="toast"></div>
+
+<!-- ============ ENGINE (DOM非依存) ============ -->
+<script>
+'use strict';
+/* ===== バランス調整値はすべてここ ===== */
+const CONFIG = {
+  SAVE_KEY:'burgerGod_v1', SAVE_INTERVAL_SEC:10, OFFLINE_MAX_SEC:8*3600,
+  DAY_SEC:3, YEAR_DAYS:365,
+  START_MONEY:200,
+  UPKEEP_RATIO:0.2,           // 維持費: 売上に対する割合（ラインを過不足なく組んだ時の原価率）
+  UPKEEP_SLACK:3,             // 使用量の何倍までの余剰能力に維持費がかかるか
+  BANKRUPT_SEC:90,            // 所持金マイナスがこの秒数続くと倒産
+  BANKRUPT_KEEP:0.5,          // 倒産時、各レベルがこの割合に減る
+  BANKRUPT_RESTART_MONEY:300, // 倒産後の再開資金
+  COST_SCALE:12,              // 全施設の費用への倍率（序盤〜全体のペース調整用）
+  COST_GROWTH:1.32,           // 施設レベルアップ費用の倍率/Lv
+  UNLOCK_COST_SCALE:1,        // 購入で解放するメニューの費用への倍率（全体の調整用）
+  LEVEL_BONUS:0.10,             // レベルが1上がるごとに生産力へ掛かる複利ボーナス（0.05=+5%/Lv）
+  MILESTONE_EVERY:10,         // Lv10,20,30...ごとに生産・販売速度に
+  MILESTONE_MULT:3,           //   この倍率がさらに掛かる
+  MISSION_REWARD_MIN:300, MISSION_REWARD_SEC:5, MISSION_REWARD_STEP:1.5,   // 報酬 = max(最低額, 今の理論売上/秒 × (SEC + STEP×番号))
+  // [種類, 目標値] の順に出題。末尾以降は自動生成
+  MISSIONS:[['sold',10],['sold',100],['maxLv',3],['annual',1e4],['facs',5],['boost',3],['sold',1000],['maxLv',10],['minLv',5],['menus',3],['annual',1e5],['sold',1e4],['maxLv',20],['minLv',10],['menus',5],['annual',1e6],['sold',1e5],['minLv',20],['annual',1e7],['maxLv',30],['sold',1e6],['menus',8]],
+  BOOST_MULT:2, BOOST_SEC:10, BOOST_COOLDOWN_SEC:30,
+  GRAPH_SECONDS:60,
+  SHARE_URL:'https://red-freegames.github.io/burger-god/',   // 公開URL
+  OTHER_GAMES_URL:'https://red-freegames.github.io/',   // 「他のゲームを見る」の遷移先（RED FREE GAMES ポータル）
+  ITEMS:[
+    {id:'wheat',name:'小麦',emoji:'🌾',color:'#e6c35c'},
+    {id:'flour',name:'小麦粉',emoji:'🥣',color:'#f2e8d0'},
+    {id:'bun',name:'バンズ',emoji:'🍞',color:'#d99a4e'},
+    {id:'muffin',name:'マフィン',emoji:'🥯',color:'#c9a06a'},
+    {id:'meat',name:'生肉',emoji:'🥩',color:'#e0566a'},
+    {id:'patty',name:'パティ',emoji:'🍖',color:'#a8553a'},
+    {id:'bacon',name:'ベーコン',emoji:'🥓',color:'#d9604a'},
+    {id:'lettuce',name:'レタス',emoji:'🥬',color:'#6fd16f'},
+    {id:'tomato',name:'トマト',emoji:'🍅',color:'#ff6a55'},
+    {id:'onion',name:'玉ねぎ',emoji:'🧅',color:'#d9a5e0'},
+    {id:'potato',name:'ポテト',emoji:'🥔',color:'#c9a36b'},
+    {id:'fries',name:'フライド',emoji:'🍟',color:'#ffd23f'},
+    {id:'hash',name:'ハッシュ',emoji:'🧇',color:'#e8c14a'},
+    {id:'cheese',name:'チーズ',emoji:'🧀',color:'#ffb52e'},
+    {id:'chicken',name:'鶏肉',emoji:'🐔',color:'#f4c6a0'},
+    {id:'cpatty',name:'チキンP',emoji:'🍗',color:'#d27b3a'},
+    {id:'nugget',name:'ナゲット',emoji:'🥡',color:'#e0a24a'}
+  ],
+  // in: 入力食材(1:1変換) / out: 出力食材 / baseCost: Lv1購入費 / rate: 1Lvあたり個/秒 / unlockAnnual: この年間売上（到達最大値）で解放（未指定=最初から）
+  FACILITIES:[
+    {id:'wheat',   name:'小麦農場',     emoji:'🌾',out:['wheat'],  in:null,    baseCost:100,    rate:1.0,start:true},
+    {id:'mill',    name:'製粉工場',     emoji:'🏭',out:['flour'],  in:'wheat', baseCost:120,    rate:1.0,start:true},
+    {id:'bakery',  name:'パン工場',     emoji:'🍞',out:['bun'],    in:'flour', baseCost:150,    rate:1.0,start:true},
+    {id:'muffinshop',name:'マフィン工房', emoji:'🥯',out:['muffin'], in:'flour', baseCost:100000, rate:1.0,unlockAnnual:8e5},
+    {id:'ranch',   name:'牧場',         emoji:'🐄',out:['meat'],in:null,baseCost:13000,rate:1.0,unlockAnnual:1e4},
+    {id:'grinder', name:'ミンチ工場',   emoji:'🥩',out:['patty'],  in:'meat',  baseCost:16000,  rate:1.0,unlockAnnual:1e4,requires:'ranch'},
+    {id:'smoker',  name:'燻製所',       emoji:'🥓',out:['bacon'],  in:'meat',  baseCost:120000, rate:1.0,unlockAnnual:5e5,requires:'ranch'},
+    {id:'lettuce', name:'レタス農場',   emoji:'🥬',out:['lettuce'],in:null,    baseCost:28000,  rate:1.0,unlockAnnual:1e5},
+    {id:'tomato',  name:'トマト農場',   emoji:'🍅',out:['tomato'], in:null,    baseCost:42000,  rate:1.0,unlockAnnual:2e5,requires:'lettuce'},
+    {id:'onion',   name:'玉ねぎ農場',   emoji:'🧅',out:['onion'],  in:null,    baseCost:60000,  rate:1.0,unlockAnnual:4e5,requires:'tomato'},
+    {id:'potato',  name:'ポテト農場',   emoji:'🥔',out:['potato'], in:null,    baseCost:90000,  rate:1.0,unlockAnnual:1e6},
+    {id:'fryer',   name:'フライ場',     emoji:'🍟',out:['fries'],  in:'potato',baseCost:130000, rate:1.0,unlockAnnual:1e6,requires:'potato'},
+    {id:'hasher',  name:'ハッシュ工房', emoji:'🧇',out:['hash'],   in:'potato',baseCost:250000, rate:1.0,unlockAnnual:2e6,requires:'potato'},
+    {id:'dairy',   name:'チーズ工房',   emoji:'🧀',out:['cheese'], in:null,    baseCost:50000,  rate:1.0,unlockAnnual:2e5,requires:'ranch'},
+    {id:'poultry', name:'養鶏場',       emoji:'🐔',out:['chicken'],in:null,    baseCost:450000, rate:1.0,unlockAnnual:3e6},
+    {id:'cplant',  name:'チキン加工場', emoji:'🍗',out:['cpatty'], in:'chicken',baseCost:600000,rate:1.0,unlockAnnual:3e6,requires:'poultry'},
+    {id:'nuggetshop',name:'ナゲット工房', emoji:'🥡',out:['nugget'], in:'chicken',baseCost:700000,rate:1.0,unlockAnnual:4e6,requires:'poultry'}
+  ],
+  // after: 解放の前提メニュー（すべて解放済みであること）/ unlockSales: 0=必要施設が揃えば自動解放 / n>0=前提メニューの最高単価×n円で購入解放
+  MENUS:[
+    {id:'bread',   name:'パン',                   emoji:'🍞',   price:150,  recipe:{bun:1},after:[],unlockSales:0},
+    {id:'burger',  name:'ハンバーガー',           emoji:'🍔',   price:450,  recipe:{bun:2,patty:1},after:['bread'],unlockSales:0},
+    // 野菜系
+    {id:'fresh',   name:'フレッシュバーガー',     emoji:'🥬🍔', price:600,  recipe:{bun:2,patty:1,lettuce:2,tomato:1,onion:1},after:['burger'],unlockSales:0},
+    {id:'set',     name:'バーガーセット',         emoji:'🍔🍟', price:850,  recipe:{bun:2,patty:1,lettuce:2,tomato:1,onion:1,fries:2},after:['fresh'],unlockSales:0},
+    // チーズ系
+    {id:'cburger', name:'チーズバーガー',         emoji:'🍔🧀', price:540,  recipe:{bun:2,patty:1,cheese:1},after:['burger'],unlockSales:0},
+    {id:'cset',    name:'チーズバーガーセット',   emoji:'🧀🍟', price:980,  recipe:{bun:2,patty:1,cheese:1,lettuce:2,tomato:1,onion:1,fries:2},after:['set','cburger'],unlockSales:0},
+    // チキン系
+    {id:'chburger',name:'チキンバーガー',         emoji:'🍗🍔', price:650,  recipe:{bun:2,cpatty:1},after:['burger'],unlockSales:0},
+    {id:'chicken', name:'チキンバーガーセット',   emoji:'🍗🍟', price:1100, recipe:{bun:2,cpatty:1,lettuce:2,tomato:1,onion:1,fries:2},after:['set','chburger'],unlockSales:0},
+    {id:'chcheese',name:'チキンチーズバーガー',   emoji:'🍗🧀', price:800,  recipe:{bun:2,cpatty:1,cheese:2},after:['chburger','cburger'],unlockSales:0},
+    // ダブル系（購入解放）
+    {id:'double',  name:'ダブルバーガー',         emoji:'🍔🍔', price:800,  recipe:{bun:2,patty:2},after:['burger'],unlockSales:300},
+    {id:'dcheese', name:'ダブルチーズバーガー',   emoji:'🍔🍔🧀',price:1100, recipe:{bun:2,patty:2,cheese:2},after:['double','cburger'],unlockSales:250},
+    {id:'dfresh',  name:'ダブルフレッシュ',       emoji:'🍔🍔🥬',price:1250, recipe:{bun:2,patty:2,lettuce:2,tomato:2,onion:1},after:['double','fresh'],unlockSales:300},
+    {id:'triple',  name:'トリプルバーガー',       emoji:'🍔🍔🍔',price:1300, recipe:{bun:2,patty:3},after:['double'],unlockSales:400},
+    {id:'mix',     name:'ミックスグリル',         emoji:'🥩🍗',  price:1800, recipe:{bun:2,patty:1,cpatty:1,cheese:1,lettuce:2,tomato:1,onion:1,fries:2},after:['double','chburger'],unlockSales:600},
+    // 加工の分岐系（ベーコン・マフィン・ハッシュ・ナゲット）
+    {id:'baconburger',name:'ベーコンバーガー',     emoji:'🥓🍔', price:620,  recipe:{bun:2,patty:1,bacon:1},after:['burger'],unlockSales:0},
+    {id:'bcheese', name:'ベーコンチーズバーガー', emoji:'🥓🧀', price:780,  recipe:{bun:2,patty:1,bacon:1,cheese:1},after:['baconburger','cburger'],unlockSales:0},
+    {id:'muffinburger',name:'マフィンバーガー',   emoji:'🥯🍔', price:560,  recipe:{muffin:2,patty:1},after:['burger'],unlockSales:0},
+    {id:'hset',    name:'ハッシュセット',         emoji:'🧇🍔', price:900,  recipe:{bun:2,patty:1,lettuce:2,tomato:1,onion:1,hash:2},after:['set'],unlockSales:0},
+    {id:'nset',    name:'ナゲットセット',         emoji:'🥡🍟', price:700,  recipe:{nugget:3,fries:2},after:['chburger'],unlockSales:0},
+    {id:'bdouble', name:'ベーコンダブル',         emoji:'🥓🍔🍔',price:1400, recipe:{bun:2,patty:2,bacon:2},after:['double','baconburger'],unlockSales:400},
+    // 高級・バカバカしい系
+    {id:'wagyu',   name:'和牛バーガー',           emoji:'🐮✨', price:3000, recipe:{bun:2,patty:3,lettuce:2,tomato:1,onion:1,fries:2,cheese:1},after:['mix','dfresh'],unlockSales:5000},
+    {id:'gold',    name:'金箔バーガー',           emoji:'🏅🍔', price:1e4,  recipe:{bun:2,patty:3,cpatty:2,lettuce:2,tomato:2,onion:2,fries:2,cheese:2},after:['wagyu'],unlockSales:20000},
+    {id:'diamond',name:'ダイヤモンドバーガー', emoji:'💎🍔', price:1e5,  recipe:{bun:3,patty:4,cpatty:3,lettuce:3,tomato:3,onion:3,fries:3},after:['gold'],unlockSales:150000},
+    {id:'moon',   name:'月面バーガー',         emoji:'🌕🍔', price:2e6,  recipe:{bun:3,patty:4,cpatty:3,lettuce:3,tomato:3,onion:3,fries:3},after:['diamond'],unlockSales:250000},
+    {id:'space',  name:'宇宙バーガー',         emoji:'🚀🍔', price:5e7,  recipe:{bun:3,patty:4,cpatty:3,lettuce:3,tomato:3,onion:3,fries:3},after:['moon'],unlockSales:350000},
+    {id:'bhole',  name:'ブラックホールバーガー',emoji:'🕳️🍔',price:2e9,  recipe:{bun:4,patty:6,cpatty:4,lettuce:4,tomato:4,onion:4,fries:5},after:['space'],unlockSales:450000},
+    {id:'galaxy', name:'銀河バーガー',         emoji:'🌌🍔', price:1e11, recipe:{bun:4,patty:6,cpatty:4,lettuce:4,tomato:4,onion:4,fries:5},after:['bhole'],unlockSales:600000},
+    {id:'nova',   name:'超新星バーガー',       emoji:'💥🍔', price:5e12, recipe:{bun:4,patty:6,cpatty:4,lettuce:4,tomato:4,onion:4,fries:5},after:['galaxy'],unlockSales:750000},
+    {id:'dimen',  name:'次元バーガー',         emoji:'🌀🍔', price:3e14, recipe:{bun:6,patty:8,cpatty:6,lettuce:6,tomato:6,onion:6,fries:8},after:['nova'],unlockSales:900000},
+    {id:'causal', name:'因果律バーガー',       emoji:'⏳🍔', price:2e16, recipe:{bun:6,patty:8,cpatty:6,lettuce:6,tomato:6,onion:6,fries:8},after:['dimen'],unlockSales:1100000},
+    {id:'genesis',name:'創世バーガー',         emoji:'☀️🍔', price:1e18, recipe:{bun:6,patty:8,cpatty:6,lettuce:6,tomato:6,onion:6,fries:8},after:['causal'],unlockSales:1300000},
+    {id:'concept',name:'概念バーガー',         emoji:'🧠🍔', price:1e20, recipe:{bun:8,patty:10,cpatty:8,lettuce:8,tomato:8,onion:8,fries:10},after:['genesis'],unlockSales:1500000},
+    {id:'void',   name:'虚無バーガー',         emoji:'⚫🍔', price:1e22, recipe:{bun:8,patty:10,cpatty:8,lettuce:8,tomato:8,onion:8,fries:10},after:['concept'],unlockSales:1800000},
+    {id:'inf',    name:'無限バーガー',         emoji:'♾️🍔', price:1e24, recipe:{bun:8,patty:10,cpatty:8,lettuce:8,tomato:8,onion:8,fries:10},after:['void'],unlockSales:2100000}
+  ],
+  // th: 年間売上のしきい値（到達最大値で判定・下がらない）
+  TITLES:[
+    {name:'パン屋さん',th:0,emoji:'🍞'},
+    {name:'町のハンバーガー屋',th:1e6,emoji:'🏪'},
+    {name:'話題のハンバーガー屋',th:1e7,emoji:'📣'},
+    {name:'人気ハンバーガー店',th:1e8,emoji:'⭐'},
+    {name:'一流ハンバーガー屋',th:1e9,emoji:'🎖️'},
+    {name:'大手ファーストフード店',th:1e10,emoji:'🏢'},
+    {name:'バーガーチェーン帝国',th:1e12,emoji:'🏰'},
+    {name:'世界の食卓を支配する者',th:1e14,emoji:'🌍'},
+    {name:'人類を太らせた男',th:1e16,emoji:'🐷'},
+    {name:'デブの神',th:1e20,emoji:'😇'},
+    {name:'バーガー惑星の創造主',th:1e24,emoji:'🪐'}
+  ]
+};
+
+/* ===== ユーティリティ ===== */
+const ITEMS=CONFIG.ITEMS, FACS=CONFIG.FACILITIES, MENUS=CONFIG.MENUS, TITLES=CONFIG.TITLES;
+const ITEM_BY={}, FAC_BY={}, ITEM_FAC={};
+ITEMS.forEach(i=>ITEM_BY[i.id]=i);
+FACS.forEach(f=>{FAC_BY[f.id]=f; f.out.forEach(o=>ITEM_FAC[o]=f);});
+function chainFacs(item,set){set=set||new Set();const f=ITEM_FAC[item];set.add(f.id);if(f.in)chainFacs(f.in,set);return set;}
+MENUS.forEach((m,i)=>{
+  m.idx=i; m.chain=new Set(); Object.keys(m.recipe).forEach(it=>chainFacs(it,m.chain));
+  m.needFacs=[...m.chain];
+
+});
+const MENU_BY={}; MENUS.forEach(m=>MENU_BY[m.id]=m);
+MENUS.forEach(m=>{const base=m.unlockSales>0?Math.max(...m.after.map(id=>MENU_BY[id].price))*m.unlockSales:0;Object.defineProperty(m,'unlockCost',{get(){return base*CONFIG.UNLOCK_COST_SCALE;}});});   // 解放費 = 前提メニューの最高単価 × unlockSales × UNLOCK_COST_SCALE
+MENUS.forEach(m=>{m.need={};Object.keys(m.recipe).forEach(it=>chainFacs(it).forEach(id=>{m.need[id]=Math.max(m.need[id]||0,m.recipe[it]);}));m.K=Object.values(m.need).reduce((a,b)=>a+b,0);});
+
+const UNITS=[['極',1e48],['載',1e44],['正',1e40],['澗',1e36],['溝',1e32],['穣',1e28],['秭',1e24],['垓',1e20],['京',1e16],['兆',1e12],['億',1e8],['万',1e4]];
+function fmt(n){
+  if(!isFinite(n))return '∞'; if(n<0)return '-'+fmt(-n);
+  if(n<1e4)return Math.floor(n).toLocaleString('ja-JP');
+  for(const [u,v] of UNITS){ if(n>=v){const q=n/v;return (q>=100?q.toFixed(0):q>=10?q.toFixed(1):q.toFixed(2))+u;} }
+  return String(n);
+}
+function fmtInt(n){if(!isFinite(n))return '∞';if(n<0)n=0;if(n<1e4)return Math.floor(n).toLocaleString('ja-JP');for(const [u,v] of UNITS){if(n>=v)return Math.floor(n/v)+u;}return String(n);}
+const yen=n=>n<0?'-¥'+fmt(-n):'¥'+fmt(n);
+function fmtRate(n){ if(n>=1e4)return fmt(n); return n>=100?n.toFixed(0):n>=10?n.toFixed(1):n.toFixed(2); }
+function fmtStock(n){ if(n>=1e4)return fmt(n); return n>=100?Math.floor(n).toLocaleString('ja-JP'):n.toFixed(1); }
+function fmtTime(s){s=Math.floor(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return (h?h+'時間':'')+(m?m+'分':'')+(!h&&!m?s+'秒':'');}
+
+/* ===== 状態 ===== */
+function newState(){
+  const fac={},stock={};
+  FACS.forEach(f=>fac[f.id]={lv:f.start?1:0});
+  ITEMS.forEach(i=>stock[i.id]=0);
+  return {v:1,money:CONFIG.START_MONEY,total:0,maxAnnual:0,titleIdx:0,
+    days:new Array(CONFIG.YEAR_DAYS).fill(0),dayAcc:0,dayClock:0,dayCount:0,yearSum:0,
+    stock,fac,menus:{bread:true},
+    boostLeft:0,boostCd:0,sound:true,speed:1,debtTime:0,bankruptCount:0,soldTotal:0,mDone:{},boostCount:0,lastSave:Date.now()};
+}
+let S=newState();
+const R={prod:{},sold:0,rev:0,incomeRate:0,fac:{},sellStall:null,pendingTitle:-1,hist:{},shist:{},cons:{},ema:{p:{},c:{}},bal:{},buyMode:1};
+function resetRuntime(){
+  ITEMS.forEach(i=>{R.prod[i.id]=0;R.cons[i.id]=0;R.ema.p[i.id]=null;R.ema.c[i.id]=null;R.bal[i.id]=null;R.hist[i.id]=[];R.shist[i.id]=[];});
+  R.hist.sales=[];R.upk=0;R.bankrupt=0;R.sold=0;R.rev=0;R.incomeRate=0;R.sellStall=null;R.pendingTitle=-1;
+  FACS.forEach(f=>R.fac[f.id]={act:0,nom:0,reason:null,ratio:1,actRate:0,flag:null});
+}
+resetRuntime();
+
+/* ===== 数式 ===== */
+function levelMult(L){ return L<=0?0:L*Math.pow(1+CONFIG.LEVEL_BONUS,L)*Math.pow(CONFIG.MILESTONE_MULT,Math.floor(L/CONFIG.MILESTONE_EVERY)); }
+const facNominal=f=>f.rate*levelMult(S.fac[f.id].lv);
+const sellRate=()=>Infinity;   // 販売速度の上限なし: 作った分は全て売れる
+const whCap=()=>Infinity;   // 倉庫なし: 在庫の上限はない
+const menuPrice=m=>m.price;
+/* --- 販売枠: 上の枠ほど優先して材料を使う --- */
+// 解放済みの全メニューを同時に提供する。単価の高いメニューから順に材料を使う
+let _mS=null,_mKey=-1,_mList=[],_mRun=new Set();
+function _menuCache(){
+  let n=0;for(const k in S.menus)n++;
+  if(_mS!==S||n!==_mKey){
+    _mS=S;_mKey=n;_mList=MENUS.filter(m=>S.menus[m.id]).sort((a,b)=>b.price-a.price);
+    _mRun=new Set();_mList.forEach(m=>m.chain.forEach(id=>_mRun.add(id)));   // 提供中のメニューに使うライン
+  }
+}
+const slotMenus=()=>{_menuCache();return _mList;};
+const upkeepFacs=()=>{_menuCache();return _mRun;};
+const curMenu=()=>slotMenus()[0]||MENU_BY.bread;
+/* --- 供給（定常状態）: 同じ入力を取り合う加工施設は、生産能力の比で按分 --- */
+const consumersOf=item=>{const run=upkeepFacs();return FACS.filter(f=>f.in===item&&S.fac[f.id].lv>0&&run.has(f.id));};   // 今のメニューで使うラインだけが稼働する
+function supply(item){
+  const f=ITEM_FAC[item]; if(S.fac[f.id].lv<=0||!upkeepFacs().has(f.id))return 0;
+  let r=facNominal(f);
+  if(f.in){
+    const tot=consumersOf(f.in).reduce((s,c)=>s+facNominal(c),0);
+    r=Math.min(r,tot>0?supply(f.in)*facNominal(f)/tot:0);
+  }
+  return r;
+}
+function limitingFac(item){
+  const f=ITEM_FAC[item]; if(S.fac[f.id].lv<=0)return f;
+  if(f.in){
+    const tot=consumersOf(f.in).reduce((s,c)=>s+facNominal(c),0);
+    if(tot>0&&supply(f.in)*facNominal(f)/tot<facNominal(f)-1e-9)return limitingFac(f.in);
+  }
+  return f;
+}
+// 供給の上限になっている施設（上流も含め、同じ水準で並んでいるものはすべて）
+function limitingFacs(item){
+  const list=[];let cur=item;
+  while(cur){
+    const f=ITEM_FAC[cur];
+    if(S.fac[f.id].lv<=0){list.push(f);break;}
+    if(facNominal(f)<=supply(cur)*(1+1e-9)+1e-12)list.push(f);   // この段の生産能力が頭打ちになっている
+    cur=f.in;
+  }
+  return list.length?list:[ITEM_FAC[item]];
+}
+function analyze(){
+  const rem={};ITEMS.forEach(i=>rem[i.id]=supply(i.id));
+  const slots=[],use={};let eff=0,income=0;
+  slotMenus().forEach(m=>{
+    let e=Infinity,lim=null;
+    for(const it in m.recipe){const r=rem[it]/m.recipe[it];if(r<e-1e-9){e=r;lim=it;}}
+    if(!isFinite(e))e=0;
+    for(const it in m.recipe)rem[it]=Math.max(0,rem[it]-e*m.recipe[it]);
+    slots.push({m,eff:e,lim,limFac:lim?limitingFac(lim):null,limFacs:lim?limitingFacs(lim):[],price:m.price,income:e*m.price});
+    eff+=e;income+=e*m.price;
+    for(const it in m.recipe){let x=it;while(x){const fa=ITEM_FAC[x];use[fa.id]=(use[fa.id]||0)+e*m.recipe[it];x=fa.in;}}
+  });
+  const first=slots.find(Boolean)||null;
+  return {slots,use,eff,income,m:first?first.m:MENU_BY.bread,lim:first?first.lim:null,limFac:first?first.limFac:null,limFacs:first?first.limFacs:[],price:first?first.price:0};
+}
+function menuUnlocked(id){return !!S.menus[id];}
+function menuAvail(m){
+  if(S.menus[m.id])return false;
+  if(!m.after.every(id=>S.menus[id]))return false;
+  return m.needFacs.every(id=>S.fac[id].lv>=1);
+}
+
+/* ===== シミュレーション ===== */
+function step(dt){
+  const boost=S.boostLeft>0?CONFIG.BOOST_MULT:1, cap=whCap(), st=S.stock;
+  // 同じ入力を取り合う加工施設（分岐）は、生産能力の比で按分する
+  const tot={},avail0={};
+  const run=upkeepFacs();
+  for(const g of FACS){if(g.in&&S.fac[g.id].lv>0&&run.has(g.id))tot[g.in]=(tot[g.in]||0)+g.rate*levelMult(S.fac[g.id].lv)*boost*dt;}
+  for(const f of FACS){
+    const fs=S.fac[f.id]; if(fs.lv<=0||!run.has(f.id))continue;
+    const rf=R.fac[f.id]; const nom=f.rate*levelMult(fs.lv)*boost*dt; let amt=nom;
+    if(f.in){
+      if(avail0[f.in]===undefined)avail0[f.in]=st[f.in];
+      amt=Math.min(nom,avail0[f.in]*nom/tot[f.in],st[f.in]);
+      if(amt<nom*0.999)rf.reason='starved';
+      st[f.in]-=amt;R.cons[f.in]+=amt; for(const o of f.out){st[o]+=amt;R.prod[o]+=amt;}
+    }else{
+      let used=0;
+      for(const o of f.out){const add=Math.min(nom,cap-st[o]);st[o]+=add;R.prod[o]+=add;used=Math.max(used,add);}
+      amt=used; if(amt<nom*0.999)rf.reason='full';
+    }
+    rf.nom+=nom; rf.act+=amt;
+  }
+  // 販売
+  for(const m of slotMenus()){   // 上の枠から順に、残っている材料で売れるだけ売る
+    let n=Infinity;
+    for(const it in m.recipe){const p=st[it]/m.recipe[it];if(p<n)n=p;}
+    if(!(n>0)||!isFinite(n))continue;
+    for(const it in m.recipe){st[it]=Math.max(0,st[it]-n*m.recipe[it]);R.cons[it]+=n*m.recipe[it];}
+    const rev=n*menuPrice(m); S.money+=rev;S.total+=rev;S.dayAcc+=rev;R.rev+=rev;R.sold+=n;S.soldTotal+=n;
+  }
+  R.sellStall=null;
+  // 維持費（稼働ラインの生産能力×単価。売れなくても毎秒かかる）
+  const upk=upkeepRate();S.money-=upk*dt;R.upk=upk;
+  if(S.money<0)S.debtTime+=dt;else S.debtTime=0;
+  // 時間
+  S.boostLeft=Math.max(0,S.boostLeft-dt); S.boostCd=Math.max(0,S.boostCd-dt);
+  S.dayClock+=dt;
+  while(S.dayClock>=CONFIG.DAY_SEC){
+    S.dayClock-=CONFIG.DAY_SEC;
+    S.days[S.dayCount%CONFIG.YEAR_DAYS]=S.dayAcc; S.dayAcc=0; S.dayCount++;
+    let s=0;for(let i=0;i<S.days.length;i++)s+=S.days[i]; S.yearSum=s;
+  }
+}
+const annual=()=>S.yearSum+S.dayAcc;
+function checkTitle(){
+  const a=annual(); if(a>S.maxAnnual)S.maxAnnual=a;
+  let idx=0;TITLES.forEach((t,i)=>{if(S.maxAnnual>=t.th)idx=i;});
+  if(idx>S.titleIdx){S.titleIdx=idx;R.pendingTitle=idx;}
+}
+function advance(sec,offline){
+  const n=Math.max(1,Math.ceil(sec)),dt=sec/n;
+  for(let i=0;i<n;i++)step(dt);
+  checkTitle(); checkMenus();
+  if(offline)S.debtTime=0; else if(S.debtTime>=CONFIG.BANKRUPT_SEC)goBankrupt();
+}
+// 維持費: 実際に使っている生産量に応じてかかる。使われていない余剰能力は USE_SLACK 倍までだけ計上
+//   単価は「売上 ÷ 使用量の合計」×UPKEEP_RATIO（＝売上のおよそ UPKEEP_RATIO が原価）
+function upkeepCalc(){
+  const A=analyze();let tot=0;upkeepFacs().forEach(id=>tot+=A.use[id]||0);
+  const u=tot>0?CONFIG.UPKEEP_RATIO*A.income/tot:0,per={};let sum=0;
+  upkeepFacs().forEach(id=>{const c=Math.min(facNominal(FAC_BY[id]),CONFIG.UPKEEP_SLACK*(A.use[id]||0))*u;per[id]=c;sum+=c;});
+  return {sum,per};
+}
+function facUpkeep(f){return upkeepCalc().per[f.id]||0;}
+function upkeepRate(){return upkeepCalc().sum;}
+function goBankrupt(){
+  const k=CONFIG.BANKRUPT_KEEP;
+  FACS.forEach(f=>{const s=S.fac[f.id];if(s.lv>0)s.lv=Math.max(1,Math.floor(s.lv*k));});
+  ITEMS.forEach(i=>S.stock[i.id]=0);
+  S.money=CONFIG.BANKRUPT_RESTART_MONEY;S.debtTime=0;S.boostLeft=0;S.boostCd=0;S.bankruptCount=(S.bankruptCount||0)+1;R.bankrupt=1;
+}
+function checkMenus(){
+  for(const m of MENUS){
+    if(m.unlockSales===0&&menuAvail(m)){S.menus[m.id]=true;R.menuNew=m.id;}
+  }
+}
+// 1秒ごとのサンプリング（UIから呼ぶ）
+function updBal(id,p,c){
+  const E=R.ema,a=0.4;
+  E.p[id]=E.p[id]===null?p:E.p[id]*(1-a)+p*a; E.c[id]=E.c[id]===null?c:E.c[id]*(1-a)+c*a;
+  const P=E.p[id],C=E.c[id];
+  R.bal[id]=(C<1e-6&&P<1e-6)?null:(C<1e-6?Infinity:P/C);   // 生産÷消費。100%で在庫は横ばい、超えれば増加
+}
+function sample(el){
+  const G=CONFIG.GRAPH_SECONDS;
+  ITEMS.forEach(i=>{updBal(i.id,R.prod[i.id]/el,R.cons[i.id]/el);R.cons[i.id]=0;const h=R.hist[i.id];h.push(R.prod[i.id]/el);R.prod[i.id]=0;while(h.length>G)h.shift();const sh=R.shist[i.id];sh.push(S.stock[i.id]);while(sh.length>G)sh.shift();});
+  const hs=R.hist.sales;hs.push(R.sold/el);while(hs.length>G)hs.shift();
+  R.incomeRate=R.rev/el;R.soldRate=R.sold/el;R.rev=0;R.sold=0;
+  FACS.forEach(f=>{const r=R.fac[f.id];r.ratio=r.nom>0?r.act/r.nom:1;r.actRate=r.act/el;
+    r.flag=(r.nom>0&&r.ratio<0.95)?r.reason:null; r.act=0;r.nom=0;if(r.ratio>=0.95)r.reason=null;});
+}
+
+/* ===== 購入 ===== */
+function quote(base,g,L,mode,budget){
+  const c0=base*Math.pow(g,L), geo=n=>c0*(Math.pow(g,n)-1)/(g-1);
+  let n=mode;
+  if(mode==='max'){n=Math.floor(Math.log(1+budget*(g-1)/c0)/Math.log(g));if(!(n>=1))n=1;if(n>5000)n=5000;}
+  return {n,cost:geo(n)};
+}
+const facBase=f=>f.baseCost*CONFIG.COST_SCALE;
+const qFac=(f,mode)=>{const lv=S.fac[f.id].lv;return lv<=0?{n:1,cost:facBase(f)}:quote(facBase(f),CONFIG.COST_GROWTH,lv,mode,S.money);};
+function facLocked(f){return f.requires&&S.fac[f.requires].lv<1;}
+function facUnlocked(f){return S.fac[f.id].lv>0||S.maxAnnual>=(f.unlockAnnual||0);}
+function pay(q){if(S.money<q.cost)return false;S.money-=q.cost;return true;}
+function buyFac(id,mode){const f=FAC_BY[id];if(!facUnlocked(f)||facLocked(f))return false;const q=qFac(f,mode||R.buyMode);if(!pay(q))return false;S.fac[id].lv+=q.n;checkMenus();return true;}
+function buyMenu(id){const m=MENU_BY[id];if(!menuAvail(m)||m.unlockSales===0||S.money<m.unlockCost)return false;S.money-=m.unlockCost;S.menus[id]=true;return true;}
+function triggerBoost(){if(S.boostCd>0)return false;S.boostLeft=CONFIG.BOOST_SEC;S.boostCd=CONFIG.BOOST_COOLDOWN_SEC;S.boostCount=(S.boostCount||0)+1;return true;}
+/* ===== ミッション ===== */const MISSION_DEF={  sold:{text:n=>`累計 ${fmtInt(n)}個 売る`,val:()=>S.soldTotal},  maxLv:{text:n=>`どれかの施設を Lv${n} にする`,val:()=>Math.max(...FACS.map(f=>S.fac[f.id].lv))},  minLv:{text:n=>`建てた施設を すべて Lv${n} 以上にそろえる`,val:()=>Math.min(...FACS.filter(f=>S.fac[f.id].lv>0).map(f=>S.fac[f.id].lv))},  annual:{text:n=>`年間売上 ${yen(n)} に到達する`,val:()=>S.maxAnnual},  facs:{text:n=>`施設を ${n}つ 建てる`,val:()=>FACS.filter(f=>S.fac[f.id].lv>0).length},  menus:{text:n=>`メニューを ${n}種類 解放する`,val:()=>Object.keys(S.menus).length},  boost:{text:n=>`生産ブーストを ${n}回 使う`,val:()=>S.boostCount||0}};function missionAt(i){  const L=CONFIG.MISSIONS;if(i<L.length)return {id:i,type:L[i][0],n:L[i][1]};  const k=i-L.length,c=Math.floor(k/3),type=['sold','maxLv','annual'][k%3];  return {id:i,type,n:type==='sold'?1e7*Math.pow(5,c):type==='maxLv'?40+10*c:1e13*Math.pow(100,c)};}function missionActive(){const out=[];for(let i=0;out.length<3&&i<100000;i++){if(!S.mDone[i])out.push(missionAt(i));}return out;}function missionReward(i){return Math.max(CONFIG.MISSION_REWARD_MIN,analyze().income*(CONFIG.MISSION_REWARD_SEC+CONFIG.MISSION_REWARD_STEP*i));}function claimMission(i){const m=missionAt(i);if(S.mDone[i])return 0;if(MISSION_DEF[m.type].val()<m.n)return 0;const r=missionReward(i);S.money+=r;S.mDone[i]=true;return r;}
+
+/* ===== セーブ/ロード ===== */
+function save(){
+  try{S.lastSave=Date.now();localStorage.setItem(CONFIG.SAVE_KEY,JSON.stringify(S));}catch(e){}
+}
+function load(){
+  let raw=null;try{raw=localStorage.getItem(CONFIG.SAVE_KEY);}catch(e){}
+  if(!raw)return null;
+  try{
+    const d=JSON.parse(raw),b=newState();
+    for(const k of Object.keys(b)){if(d[k]!==undefined&&typeof d[k]===typeof b[k])b[k]=d[k];}
+    FACS.forEach(f=>{if(d.fac&&d.fac[f.id])b.fac[f.id]={lv:+d.fac[f.id].lv||0};if(f.start&&b.fac[f.id].lv<1)b.fac[f.id].lv=1;});
+    ITEMS.forEach(i=>{b.stock[i.id]=(d.stock&&+d.stock[i.id])||0;});
+    if(!Array.isArray(b.days)||b.days.length!==CONFIG.YEAR_DAYS)b.days=new Array(CONFIG.YEAR_DAYS).fill(0);
+    for(const k of Object.keys(b.menus)){if(!MENU_BY[k])delete b.menus[k];}
+    b.menus.bread=true;
+    b.menus.bread=true;
+    return b;
+  }catch(e){return null;}
+}
+const BG={upkeepRate,facUpkeep,CONFIG,get S(){return S;},R,advance,step,buyFac,buyMenu,slotMenus,triggerBoost,claimMission,missionActive,analyze,supply,quote,qFac,menuPrice,annual,checkMenus,menuAvail,facLocked,facUnlocked,sample,levelMult,fmt,setState(s){S=s;resetRuntime();}};
+if(typeof window!=='undefined')window.BG=BG;
+</script>
+
+<!-- ============ UI ============ -->
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const hold=(sel)=>document.querySelector(sel);
+/* ----- 効果音 ----- */
+let AC=null;
+function tone(freq,dur,type,vol,delay){
+  if(!S.sound)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended')AC.resume();
+    const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();
+    o.type=type||'sine';o.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(vol||0.05,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+dur+0.02);
+  }catch(e){}
+}
+const sfx={
+  buy(){tone(660,.09,'triangle',.06);tone(880,.12,'triangle',.06,.07);},
+  boost(){tone(300,.25,'sawtooth',.05);tone(600,.3,'sawtooth',.05,.08);tone(900,.3,'square',.03,.16);},
+  err(){tone(150,.12,'square',.04);},
+  fanfare(){[523,659,784,1046,784,1046,1318].forEach((f,i)=>tone(f,.25,'triangle',.07,i*.12));}
+};
+function toast(msg,ms){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',ms||1800);}
+
+/* ----- DOM構築 ----- */
+const refs={stock:{},fac:{},menu:{},arrows:[],rows:[]};
+const LINES=[['wheat','mill',['bakery','muffinshop']],['ranch',['grinder','smoker']],['lettuce','tomato','onion'],['potato',['fryer','hasher']],['dairy'],['poultry',['cplant','nuggetshop']]];
+function facCard(id){
+  const f=FAC_BY[id],d=document.createElement('div');d.className='fac';d.dataset.id=id;
+  d.innerHTML=`<span class="fb"></span><div class="fe">${f.emoji}</div><div class="fn">${f.name}</div><div class="fl"></div><div class="fr"></div><div class="fs"></div><div class="run"><i></i></div>`;
+  refs.fac[id]={el:d,fe:d.querySelector('.fe'),fb:d.querySelector('.fb'),fl:d.querySelector('.fl'),fr:d.querySelector('.fr'),fs:d.querySelector('.fs'),run:d.querySelector('.run>i')};
+  return d;
+}
+function buildLine(){
+  const box=$('line');
+  LINES.forEach(row=>{
+    const fl=document.createElement('div');fl.className='flow';
+    row.forEach((c,i)=>{
+      if(i>0){const a=document.createElement('div');a.className='arrow';a.textContent='▶';fl.appendChild(a);refs.arrows.push({el:a,down:Array.isArray(c)?c[0]:c});}
+      if(Array.isArray(c)){const col=document.createElement('div');col.className='col';c.forEach(id=>col.appendChild(facCard(id)));fl.appendChild(col);}
+      else fl.appendChild(facCard(c));
+    });
+    box.appendChild(fl);refs.rows.push({el:fl,first:row[0]});
+  });
+  box.addEventListener('click',e=>{const c=e.target.closest('.fac');if(c)openDetail(c.dataset.id);});
+}
+function buildMenus(){
+  $('mUnlock').onclick=()=>{if(buyMenu(selMenuId)){sfx.fanfare();toast('🎉 新メニュー解放：'+MENU_BY[selMenuId].name);}else sfx.err();render();};
+  const box=$('menus');
+  MENUS.forEach(m=>{
+    const b=document.createElement('button');b.className='mchip hidden';b.dataset.id=m.id;
+    box.appendChild(b);refs.menu[m.id]=b;
+  });
+  box.addEventListener('click',e=>{
+    const b=e.target.closest('.mchip');if(!b)return;selMenuId=b.dataset.id;tone(500,.05,'triangle',.04);
+    render();
+  });
+}
+let selMenuId='bread';
+let lastRecipe='';
+function renderRecipe(m){  const key=m?m.id:'';if(key!==lastRecipe){    lastRecipe=key;    $('recipe').innerHTML=m?Object.keys(m.recipe).map(it=>`<span class="rc">${ITEM_BY[it].emoji}${ITEM_BY[it].name}×${m.recipe[it]}</span>`).join(''):'';  }}
+
+/* ----- 描画 ----- */
+function titleProgress(){
+  const i=S.titleIdx,t=TITLES[i],n=TITLES[i+1];
+  if(!n)return 1;
+  const a=Math.max(S.maxAnnual,1);
+  if(t.th<=0)return Math.min(1,a/n.th);
+  return Math.max(0,Math.min(1,(Math.log10(a)-Math.log10(t.th))/(Math.log10(n.th)-Math.log10(t.th))));
+}
+function render(){
+  const A=analyze(),m=A.m,cap=whCap();
+  const t=TITLES[S.titleIdx],nx=TITLES[S.titleIdx+1];
+  $('rank').textContent=t.emoji+' '+t.name;
+  $('rankNext').textContent=nx?`次の称号『${nx.name}』まで 年間売上 ${yen(nx.th)}`:'最高称号に到達！ 売上は無限に伸ばせます';
+  $('rankBar').style.width=(titleProgress()*100)+'%';
+  $('sAnnual').textContent='¥'+fmtInt(annual());
+  $('sSold').textContent=fmtInt(S.soldTotal)+'個';
+  $('sSoldRate').textContent='いま '+fmtRate(R.soldRate||0)+'個/秒';
+  $('sTotal').textContent='¥'+fmtInt(S.total);
+  $('sMoney').textContent=(S.money<0?'-¥'+fmtInt(-S.money):'¥'+fmtInt(S.money));
+  const net=R.incomeRate-R.upk;
+  $('sIncome').innerHTML='売上 '+yen(R.incomeRate)+' − 維持費 '+yen(R.upk)+' /秒<br><span style="color:'+(net<0?'var(--red)':'var(--grn)')+';font-weight:700">収支 '+(net<0?'':'+')+yen(net)+' /秒</span>';
+  $('sMoney').style.color=S.money<0?'var(--red)':'';
+  $('sMenu').textContent=A.slots.length+'種類を販売中';
+  $('sPrice').textContent='最高単価 '+yen(A.slots[0].price)+'　販売 '+fmtRate(A.eff)+'個/秒';
+  const y=Math.floor(S.dayCount/CONFIG.YEAR_DAYS)+1,d=S.dayCount%CONFIG.YEAR_DAYS+1;
+  $('sDate').textContent=`${y}年目 ${d}日目`;
+  // アラート
+  const al=$('alert');
+  if(S.money<0){al.className='bad';al.textContent='🔥 赤字！ 所持金がマイナスです。あと'+Math.max(0,Math.ceil(CONFIG.BANKRUPT_SEC-S.debtTime))+'秒で倒産します。売上が維持費を上回るよう、詰まっている食材のラインを強化しましょう';}
+  else if(A.lim){const it=ITEM_BY[A.lim];al.className='hint';al.textContent=`💡 ${it.emoji}${it.name}が売上の上限です（${A.limFacs.map(x=>x.emoji+x.name).join('・')}を強化すると売上が伸びます）`;}
+  else{al.className='';al.textContent='';}
+  // ブースト
+  const bb=$('burger'),bs=$('bstat');
+  if(S.boostLeft>0){bb.className='boost';bb.style.setProperty('--p',S.boostLeft/CONFIG.BOOST_SEC*100);bs.textContent=`⚡ 生産ブースト中 ${S.boostLeft.toFixed(1)}秒`;bs.style.color='var(--grn)';}
+  else if(S.boostCd>0){bb.className='cd';bb.style.setProperty('--p',(1-S.boostCd/(CONFIG.BOOST_COOLDOWN_SEC-CONFIG.BOOST_SEC))*100);bs.textContent=`クールダウン ${S.boostCd.toFixed(0)}秒`;bs.style.color='var(--blu)';}
+  else{bb.className='ready';bb.style.setProperty('--p',100);bs.textContent='🍔タップで全ライン2倍速！';bs.style.color='var(--acc)';}
+  // 販売メニュー（全メニューを同時に提供。タップで必要な材料を表示）
+  if(!MENU_BY[selMenuId])selMenuId='bread';
+  let shownLocked=0;
+  MENUS.forEach(mm=>{
+    const b=refs.menu[mm.id],un=S.menus[mm.id],sel=selMenuId===mm.id?' sel':'';
+    if(un){b.className='mchip'+sel;b.textContent=mm.emoji+' '+mm.name;}
+    else if(shownLocked<6&&mm.after.every(id=>S.menus[id])){shownLocked++;b.className='mchip locked'+sel;b.textContent='🔒 '+mm.emoji+' '+mm.name;}
+    else b.className='mchip hidden';
+  });
+  if(refs.menu[selMenuId].classList.contains('hidden'))selMenuId='bread';
+  {
+    const mm=MENU_BY[selMenuId],un=!!S.menus[mm.id],sl=A.slots.find(x=>x.m===mm);
+    const rec=Object.keys(mm.recipe).map(it=>`<span class="rc">${ITEM_BY[it].emoji}${ITEM_BY[it].name}×${mm.recipe[it]}</span>`).join('');
+    let info=`<b>${mm.emoji} ${mm.name}</b>　${yen(mm.price)}<div class="rcs">必要な材料：${rec}</div>`;
+    const ub=$('mUnlock');
+    if(un){
+      info+=sl?`<div class="mstat">売れている量：<b>${fmtRate(sl.eff)}</b>個/秒 ≒ <b>${yen(sl.income)}</b>/秒`+(sl.lim?`　足りない食材：${ITEM_BY[sl.lim].emoji}${ITEM_BY[sl.lim].name}`:'')+'</div>':'';
+      ub.style.display='none';
+    }else{
+      const av=menuAvail(mm);
+      if(!av){const miss=mm.needFacs.filter(id=>S.fac[id].lv<1).map(id=>FAC_BY[id].name);info+=`<div class="mstat">🔒 先に必要な施設：${miss.join('・')}</div>`;ub.style.display='none';}
+      else if(mm.unlockCost>0){ub.style.display='';ub.textContent='🔓 解放する '+yen(mm.unlockCost);ub.disabled=S.money<mm.unlockCost;}
+      else ub.style.display='none';
+    }
+    if($('mInfo')._h!==info){$('mInfo').innerHTML=info;$('mInfo')._h=info;}
+  }
+  $('diag').innerHTML=`提供中 <b>${A.slots.length}</b>種類　合計 <b>${fmtRate(A.eff)}</b>個/秒 ≒ <b>${yen(A.income)}</b>/秒`;
+  // 管理
+  // 施設
+  FACS.forEach(f=>{
+    const r=refs.fac[f.id],st=S.fac[f.id],rf=R.fac[f.id],built=st.lv>0;
+    const out=f.out[0];let cls='fac';
+    r.fb.textContent='';
+    if(!built){
+      cls+=' locked';const lk=facLocked(f);
+      r.fl.textContent=lk?'🔒 '+FAC_BY[f.requires].name+'が必要':'未建設';
+      r.fr.textContent='建設 '+yen(facBase(f));r.fs.textContent='';r.run.style.width='0';
+      if(!lk&&S.money>=facBase(f))r.fr.style.color='var(--grn)';else r.fr.style.color='';
+    }else{
+      const nomB=facNominal(f)*(S.boostLeft>0?CONFIG.BOOST_MULT:1);
+      r.fl.textContent='Lv'+st.lv;
+      r.fr.style.color='';
+      r.fr.textContent=fmtRate(nomB)+'個/秒';
+      r.fs.textContent='';
+    }
+    // レベルに応じて施設の絵が増える／節目で光る
+    const nIcon=built?Math.min(st.lv,12):1;
+    if(r._n!==nIcon){r._n=nIcon;r.fe.textContent=f.emoji.repeat(nIcon);r.fe.style.fontSize=(nIcon<=1?32:nIcon<=3?26:nIcon<=6?20:15)+'px';}
+    if(built){if(st.lv>=50)cls+=' ms3';else if(st.lv>=30)cls+=' ms2';else if(st.lv>=10)cls+=' ms1';}
+    if(r.el.classList.contains('flash'))cls+=' flash';
+    r.el.className=cls;
+  });
+  // 未解放の施設はラインから隠す
+  FACS.forEach(f=>{refs.fac[f.id].el.style.display=facUnlocked(f)?'':'none';});
+  refs.arrows.forEach(a=>{a.el.style.display=facUnlocked(FAC_BY[a.down])?'':'none';});
+  refs.rows.forEach(r=>{r.el.style.display=facUnlocked(FAC_BY[r.first])?'':'none';});
+  const nxt=FACS.filter(f=>!facUnlocked(f)).sort((a,b)=>a.unlockAnnual-b.unlockAnnual)[0];
+  $('nextUnlock').textContent=nxt?`🔓 次の解放：年間売上 ${yen(nxt.unlockAnnual)} で ${FACS.filter(f=>!facUnlocked(f)&&f.unlockAnnual===nxt.unlockAnnual).map(f=>f.emoji+f.name).join('・')}`:'';
+  renderMissions();
+  if($('detail').classList.contains('show'))renderDetail();
+  drawGraph();
+}
+/* ----- ミッション ----- */
+const mSlots=[];
+function buildMissions(){
+  const box=$('mlist');
+  for(let k=0;k<3;k++){
+    const d=document.createElement('div');d.className='ms';
+    d.innerHTML='<div class="mt"></div><div class="mr"><button class="btn"></button><div class="rw"></div></div><div class="mb"><i></i></div>';
+    box.appendChild(d);
+    mSlots.push({el:d,t:d.querySelector('.mt'),bar:d.querySelector('.mb>i'),btn:d.querySelector('.btn'),rw:d.querySelector('.rw'),id:-1});
+  }
+  box.addEventListener('click',e=>{
+    const b=e.target.closest('.btn');if(!b)return;
+    const s=mSlots.find(x=>x.btn===b);if(!s||s.id<0)return;
+    const r=claimMission(s.id);
+    if(r>0){sfx.fanfare();toast('🎯 ミッション達成！ 報酬 '+yen(r),2400);}else sfx.err();
+    render();
+  });
+}
+function renderMissions(){
+  const act=missionActive();
+  mSlots.forEach((s,k)=>{
+    const m=act[k];if(!m){s.el.style.display='none';return;}
+    s.el.style.display='';s.id=m.id;
+    const def=MISSION_DEF[m.type],val=def.val(),ok=val>=m.n;
+    s.t.textContent=def.text(m.n)+(ok?'':`　（${fmtInt(val)} / ${fmtInt(m.n)}）`);
+    s.bar.style.width=Math.min(100,val/m.n*100)+'%';
+    s.el.className='ms'+(ok?' ok':'');
+    s.btn.disabled=!ok;s.btn.textContent=ok?'受け取る':'達成まで';
+    s.rw.textContent='報酬 '+yen(missionReward(m.id));
+  });
+}
+function setBtn(b,t1,t2,ok){
+  const h=`${t1}<small>${t2}</small>`;if(b._h!==h){b.innerHTML=h;b._h=h;}
+  b.disabled=!ok;
+}
+
+/* ----- グラフ ----- */
+let logScale=false;
+function drawGraph(){
+  const c=$('graph'),dpr=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;
+  if(!w)return;
+  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  const GI=ITEMS.filter(i=>facUnlocked(ITEM_FAC[i.id])),n=GI.length,narrow=w<620,padL=narrow?44:56,padR=10,gx=padL,gw=w-padL-padR,gy=26,gh=h-gy-28,slot=gw/n,bw=Math.min(slot*.62,44);
+  const boost=S.boostLeft>0?CONFIG.BOOST_MULT:1;
+  const T=v=>logScale?Math.log10(1+v):v;
+  const runSet=upkeepFacs();   // 今の枠のメニューで使うライン
+  const prod=GI.map(i=>{const fa=ITEM_FAC[i.id];return S.fac[fa.id].lv>0?facNominal(fa)*boost:0;});
+  // 必要な量: 売っている全メニューを同じ速度Xで売る、と考える。
+  //   X は「最もよく作れている食材」を使い切れる速度。材料を共有するメニューの分は合算する。
+  const ms=slotMenus(),dem={},shared={};ITEMS.forEach(i=>{dem[i.id]=0;shared[i.id]=0;});
+  ms.forEach(m=>{for(const it in m.recipe)shared[it]+=m.recipe[it];});
+  let X=0;ITEMS.forEach(i=>{if(shared[i.id]>0)X=Math.max(X,supply(i.id)*boost/shared[i.id]);});
+  ms.forEach(m=>{for(const it in m.recipe){let x=it;while(x){dem[x]+=X*m.recipe[it];x=ITEM_FAC[x].in;}}});
+  const used=GI.map(i=>runSet.has(ITEM_FAC[i.id].id));
+  const mark=GI.map((i,k)=>used[k]?dem[i.id]:0);
+  const ptop=T(Math.max(1,...prod,...mark))*1.15;
+  g.lineWidth=1;g.font='12px sans-serif';
+  for(let k=0;k<=4;k++){
+    const yy=gy+gh-gh*k/4;
+    g.strokeStyle='#ffffff1c';g.beginPath();g.moveTo(gx,yy);g.lineTo(gx+gw,yy);g.stroke();
+    g.fillStyle='#e8cfa8';g.textAlign='right';g.fillText(fmtRate(logScale?Math.pow(10,ptop*k/4)-1:ptop*k/4),gx-5,yy+4);
+  }
+  g.font='bold 13px sans-serif';
+  g.fillStyle='#e8cfa8';g.textAlign='left';g.fillText('■ 今の生産量（個/秒）',2,14);
+  g.fillStyle='#ffffff';g.textAlign='right';g.fillText('淡い部分＝足りない分　━＝必要な量　灰色＝使わない食材',w-2,14);
+  const Y=v=>gy+gh-gh*Math.min(1,T(v)/ptop);
+  GI.forEach((it,k)=>{
+    const cx=gx+slot*(k+.5),owned=S.fac[ITEM_FAC[it.id].id].lv>0,v=prod[k],u=used[k];
+    const yTop=Y(v),bh=gy+gh-yTop;
+    g.globalAlpha=owned?(u?.9:.55):.25;g.fillStyle=u?it.color:'#8c8c8c';g.fillRect(cx-bw/2,yTop,bw,bh);g.globalAlpha=1;
+    if(mark[k]>v+1e-9){   // 足りない分を白い帯で示す
+      const yM=Y(mark[k]);g.globalAlpha=.28;g.fillStyle=it.color;g.fillRect(cx-bw/2,yM,bw,yTop-yM);g.globalAlpha=1;g.setLineDash([4,3]);g.strokeStyle=it.color;g.lineWidth=1.5;g.strokeRect(cx-bw/2+.75,yM,bw-1.5,yTop-yM);g.setLineDash([]);
+    }
+    if(owned){g.fillStyle=u?'#fff4e6':'#9a9a9a';g.textAlign='center';g.font='bold 12px sans-serif';g.fillText(fmtRate(v),cx,Math.min(yTop,mark[k]>0?Y(mark[k]):yTop)-5);}
+    g.font=(narrow?'11px':'13px')+' sans-serif';g.fillStyle=owned?(u?'#fff4e6':'#9a9a9a'):'#7d6a58';g.textAlign='center';
+    g.fillText(narrow?it.name.slice(0,3):(it.name.length>5?it.name.slice(0,5):it.name),cx,gy+gh+18);
+    if(mark[k]>0){const yy=Y(mark[k]);g.lineWidth=5;g.strokeStyle='rgba(0,0,0,.6)';g.beginPath();g.moveTo(cx-bw/2-5,yy);g.lineTo(cx+bw/2+5,yy);g.stroke();g.lineWidth=2.5;g.strokeStyle='#ffffff';g.beginPath();g.moveTo(cx-bw/2-5,yy);g.lineTo(cx+bw/2+5,yy);g.stroke();}
+  });
+}
+
+/* ----- 詳細パネル ----- */
+let detailId=null;
+function openDetail(id){detailId=id;$('detail').classList.add('show');renderDetail();}
+function closeDetail(){$('detail').classList.remove('show');detailId=null;}
+function renderDetail(){
+  const f=FAC_BY[detailId];if(!f)return;const st=S.fac[f.id],cap=whCap(),rf=R.fac[f.id];
+  $('dTitle').textContent=f.emoji+' '+f.name+(st.lv?`  Lv${st.lv}`:'（未建設）');
+  const outs=f.out.map(o=>ITEM_BY[o].emoji+ITEM_BY[o].name).join('・');
+  $('dDesc').textContent=(f.in?`${ITEM_BY[f.in].emoji}${ITEM_BY[f.in].name} を消費して `:'')+`${outs} を生産`+(f.out.length>1?'（同じ速度で両方を生産）':'');
+  if(st.lv<=0){
+    $('dKv').innerHTML='';
+    const lk=facLocked(f);
+    setBtn($('dUp'),lk?`🔒 ${FAC_BY[f.requires].name}の建設が必要`:'🏗 建設する',`Lv1で ${fmtRate(f.rate)}個/秒　${yen(facBase(f))}`,!lk&&S.money>=facBase(f));
+    return;
+  }
+  const boost=S.boostLeft>0?CONFIG.BOOST_MULT:1;
+  const mm=Object.values(MENU_BY).filter(m=>m.chain.has(f.id)&&S.menus[m.id]).length;
+  $('dKv').innerHTML=
+   `<div><span>生産力</span>${fmtRate(facNominal(f)*boost)} 個/秒${boost>1?' (ブースト中)':''}</div>`+
+   `<div><span>実効生産（直近1秒）</span>${fmtRate(rf.actRate)} 個/秒</div>`+
+   f.out.map(o=>`<div><span>${ITEM_BY[o].emoji}${ITEM_BY[o].name} 在庫</span>${fmtStock(S.stock[o])}</div>`).join('')+
+   `<div><span>状態</span>${rf.flag==='starved'?'原料待ち':rf.flag==='full'?'出力停止中':'稼働中'}</div>`+
+   `<div><span>影響するメニュー</span>${mm}種</div>`+
+   `<div><span>維持費（今のメニューで稼働中のみ）</span>${yen(facUpkeep(f))} /秒</div>`;
+  const q=qFac(f,R.buyMode);
+  setBtn($('dUp'),`⬆ 生産力アップ Lv${st.lv}→${st.lv+q.n}`,`${fmtRate(facNominal(f))}→${fmtRate(f.rate*levelMult(st.lv+q.n))}個/秒　${yen(q.cost)}`,S.money>=q.cost);
+}
+
+/* ----- 演出 ----- */
+function celebrate(idx){
+  const t=TITLES[idx];
+  $('celTitle').textContent=t.emoji+' '+t.name;
+  $('celSub').textContent='年間売上 '+yen(S.maxAnnual)+' 到達！';
+  const ov=$('cel');ov.classList.add('show');
+  ov.querySelectorAll('.conf').forEach(e=>e.remove());
+  const em=['🍔','🍟','🎉','✨','🧀','🍗','🥬','🍅','⭐'];
+  for(let i=0;i<60;i++){const s=document.createElement('span');s.className='conf';s.textContent=em[i%em.length];
+    s.style.left=Math.random()*100+'%';s.style.animationDuration=(2+Math.random()*3)+'s';s.style.animationDelay=Math.random()*1.5+'s';ov.appendChild(s);}
+  sfx.fanfare();
+}
+function showInfo(title,body){$('iTitle').textContent=title;$('iBody').innerHTML=body;$('info').classList.add('show');}
+function shareX(){
+  const t=TITLES[S.titleIdx];
+  const text=`年間売上${fmt(S.maxAnnual)}円、称号『${t.name}』になりました！🍔 #バーガーGOD`;
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(text)+'&url='+encodeURIComponent(CONFIG.SHARE_URL),'_blank','noopener');
+}
+
+/* ----- 入力 ----- */
+function flyText(x,y,txt){const e=document.createElement('div');e.className='fly';e.textContent=txt;e.style.left=x+'px';e.style.top=y+'px';document.body.appendChild(e);setTimeout(()=>e.remove(),900);}
+$('burger').addEventListener('click',e=>{
+  const r=$('burger').getBoundingClientRect(),x=e.clientX||r.left+r.width/2,y=e.clientY||r.top;
+  if(triggerBoost()){sfx.boost();flyText(x-30,y-20,'⚡ ×2 BOOST!');}
+  else{tone(220,.05,'square',.03);flyText(x-20,y-20,`あと${Math.ceil(S.boostCd)}秒`);}
+  render();
+});
+function milestoneFx(f,lv){
+  sfx.fanfare();
+  toast(`🎉 ${f.emoji}${f.name} Lv${lv} 達成！ 生産力 ×${CONFIG.MILESTONE_MULT}`,2800);
+  const c=refs.fac[f.id].el;c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1400);
+  const e=document.createElement('div');e.className='fly';e.style.cssText='left:50%;top:40%;font-size:34px;transform:translateX(-50%)';e.textContent=`✨ Lv${lv}！ ×${CONFIG.MILESTONE_MULT} ✨`;document.body.appendChild(e);setTimeout(()=>e.remove(),900);
+}
+$('dUp').onclick=()=>{
+  if(!detailId)return;const id=detailId,lv0=S.fac[id].lv;
+  if(buyFac(id)){
+    sfx.buy();const lv1=S.fac[id].lv,E=CONFIG.MILESTONE_EVERY;
+    if(lv0===0)toast('🏗 '+FAC_BY[id].name+'を建設！');
+    else if(Math.floor(lv1/E)>Math.floor(lv0/E))milestoneFx(FAC_BY[id],Math.floor(lv1/E)*E);
+  }else sfx.err();
+  render();
+};
+$('dClose').onclick=closeDetail;
+$('detail').addEventListener('click',e=>{if(e.target===$('detail'))closeDetail();});
+$('iClose').onclick=$('iOk').onclick=()=>$('info').classList.remove('show');
+$('celClose').onclick=e=>{e.stopPropagation();$('cel').classList.remove('show');};
+$('cel').onclick=()=>$('cel').classList.remove('show');
+$('celShare').onclick=e=>{e.stopPropagation();shareX();};
+$('bShare').onclick=shareX;
+$('bOther').onclick=()=>window.open(CONFIG.OTHER_GAMES_URL,'_blank','noopener');
+$('gScale').onclick=()=>{logScale=!logScale;$('gScale').textContent='目盛: '+(logScale?'対数':'線形');drawGraph();};
+$('bSound').onclick=()=>{S.sound=!S.sound;$('bSound').textContent=S.sound?'🔊 効果音':'🔇 効果音OFF';if(S.sound)sfx.buy();};
+$('bReset').onclick=()=>{
+  if(confirm('セーブデータを削除して最初からやり直します。よろしいですか？')){
+    try{localStorage.removeItem(CONFIG.SAVE_KEY);}catch(e){}
+    window.__noSave=true;location.reload();
+  }
+};
+document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{
+  const v=b.dataset.buy;R.buyMode=v==='max'?'max':+v;updateBuyBtns();render();
+});
+document.querySelectorAll('[data-speed]').forEach(b=>b.onclick=()=>{S.speed=+b.dataset.speed;updateSpeedBtns();tone(500+S.speed*60,.08,'triangle',.05);});
+function updateSpeedBtns(){document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('on',+b.dataset.speed===(S.speed||1)));}
+function updateBuyBtns(){updateSpeedBtns();document.querySelectorAll('[data-buy]').forEach(b=>b.classList.toggle('on',String(R.buyMode)===b.dataset.buy));}
+
+/* ----- 起動・ループ ----- */
+function init(){
+  buildLine();buildMenus();buildMissions();
+  const loaded=load();
+  if(loaded){
+    S=loaded;resetRuntime();checkMenus();
+    const away=(Date.now()-S.lastSave)/1000;
+    if(away>10){
+      S.boostLeft=0;S.boostCd=0;
+      const sec=Math.min(away,CONFIG.OFFLINE_MAX_SEC),before=S.total,t0=S.titleIdx;
+      advance(sec,true);const earned=S.total-before;
+      resetRuntimeSamples();
+      showInfo('おかえりなさい 🍔',`留守の間（${fmtTime(sec)}${away>sec?`・上限${CONFIG.OFFLINE_MAX_SEC/3600}時間まで`:''}）に<br><b style="font-size:22px;color:var(--acc)">${yen(earned)}</b><br>売れました！`);
+    }
+  }
+  $('bSound').textContent=S.sound?'🔊 効果音':'🔇 効果音OFF';
+  updateBuyBtns();
+  R.unlocked=new Set(FACS.filter(f=>facUnlocked(f)).map(f=>f.id));R.unlockedReady=true;
+  last=Date.now();render();
+}
+function resetRuntimeSamples(){ITEMS.forEach(i=>{R.prod[i.id]=0;R.cons[i.id]=0;});R.sold=0;R.rev=0;FACS.forEach(f=>{R.fac[f.id].act=0;R.fac[f.id].nom=0;});}
+let last=Date.now(),sampAcc=0,saveAcc=0,renderAcc=0;
+function tick(){
+  const now=Date.now();let dt=(now-last)/1000;last=now;if(dt<=0)return;
+  if(dt>5){
+    const sec=Math.min(dt,CONFIG.OFFLINE_MAX_SEC),before=S.total;
+    advance(sec,true);resetRuntimeSamples();
+    if(dt>=60)showInfo('おかえりなさい 🍔',`留守の間（${fmtTime(sec)}）に<br><b style="font-size:22px;color:var(--acc)">${yen(S.total-before)}</b><br>売れました！`);
+  }else advance(dt*(S.speed||1));
+  sampAcc+=dt*(dt>5?1:(S.speed||1));if(sampAcc>=1){sample(sampAcc);sampAcc=0;}
+  saveAcc+=dt;if(saveAcc>=CONFIG.SAVE_INTERVAL_SEC){saveAcc=0;if(!window.__noSave)save();}
+  renderAcc+=dt;
+  if(R.pendingTitle>=0){const i=R.pendingTitle;R.pendingTitle=-1;celebrate(i);render();renderAcc=0;}
+  else if(renderAcc>=0.2){renderAcc=0;render();}
+  if(R.bankrupt){R.bankrupt=0;sfx.err();showInfo('💸 倒産しました…','赤字が続き、店が倒産しました。<br>各施設のレベルが半分になり、在庫は空になりました。<br>称号と累計売上は残っています。<br>再開資金 '+yen(S.money)+' からやり直しましょう。');render();}
+  {const nu=FACS.filter(f=>facUnlocked(f)&&!R.unlocked.has(f.id));if(nu.length){nu.forEach(f=>R.unlocked.add(f.id));if(R.unlockedReady){toast('🔓 新しい施設が解放：'+nu.map(f=>f.emoji+f.name).join('・'));sfx.fanfare();}}}
+  if(R.menuNew){const m=MENU_BY[R.menuNew];R.menuNew=null;toast('🎉 新メニュー解放：'+m.emoji+m.name);sfx.fanfare();}
+}
+window.addEventListener('beforeunload',()=>{if(!window.__noSave)save();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&!window.__noSave)save();});
+window.addEventListener('resize',drawGraph);
+init();
+setInterval(tick,100);
+</script>
+</body>
+</html>
